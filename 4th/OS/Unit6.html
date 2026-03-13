@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashzy Pro • Unit 6: Device Management</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+body{font-family:'Poppins',system-ui,sans-serif}
+.perspective{perspective:1400px}
+.card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,.2,.2,1)}
+.card-inner.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px;text-align:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:24px}
+.card-front{background:linear-gradient(135deg,#27272a,#18181b)}
+.card-back{background:linear-gradient(135deg,#064e3b,#18181b);transform:rotateY(180deg)}
+</style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen flex items-center justify-center">
+<div class="max-w-4xl w-full px-4 py-8">
+<!-- HEADER -->
+<div class="flex justify-between items-center mb-10">
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-yellow-400 text-black rounded-2xl flex items-center justify-center text-3xl">📟</div>
+        <div>
+            <h1 class="text-3xl font-bold">Flashzy Pro</h1>
+            <p class="text-yellow-400">Unit 6: Device Management</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-6">
+        <div onclick="showReviewAllModal()" class="flex items-center gap-2 bg-zinc-900 px-5 py-2 rounded-3xl cursor-pointer">
+            <span class="text-xs uppercase text-zinc-400">Progress</span>
+            <span class="flex gap-4 text-sm">
+                <span>✅ <span id="known-count" class="font-bold">0</span></span>
+                <span>📌 <span id="review-count" class="font-bold">0</span></span>
+            </span>
+        </div>
+        <div class="flex items-center gap-3 bg-zinc-900 px-5 py-2 rounded-3xl">
+            <span class="text-xs text-zinc-400">SHUFFLE</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="shuffle-toggle" onchange="toggleShuffle()" class="sr-only peer">
+                <div class="w-11 h-6 bg-zinc-700 peer-focus:ring-4 peer-focus:ring-yellow-400 rounded-full peer peer-checked:bg-yellow-400"></div>
+            </label>
+        </div>
+        <button onclick="showResults()" class="bg-white text-black px-6 py-3 rounded-3xl font-semibold">📊 RESULTS</button>
+    </div>
+</div>
+<!-- CARD -->
+<div class="relative max-w-2xl mx-auto">
+    <div onclick="flipCard()" class="perspective h-[420px] cursor-pointer">
+        <div id="card-inner" class="card-inner border border-zinc-700 rounded-3xl">
+            <div class="card-face card-front">
+                <div class="text-yellow-400 text-3xl mb-6">📌</div>
+                <div id="front-text" class="text-3xl font-semibold max-w-md"></div>
+                <div class="absolute bottom-6 text-xs text-zinc-500 uppercase">Tap / Space to flip</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="text-emerald-400 text-sm uppercase mb-4">ANSWER</div>
+                <div id="back-text" class="text-xl text-emerald-100 max-w-md leading-relaxed"></div>
+                <div class="absolute bottom-6 text-xs text-emerald-400/80 uppercase">Device Management • Unit 6</div>
+            </div>
+        </div>
+    </div>
+    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-zinc-900 text-yellow-400 text-xs px-5 py-1 rounded-full">
+        <span id="card-number">1</span>
+        <span class="text-zinc-600">/</span>
+        <span id="total-cards">32</span>
+    </div>
+</div>
+<!-- CONTROLS -->
+<div class="max-w-2xl mx-auto mt-10 flex justify-between items-center">
+    <button onclick="prevCard()" class="bg-zinc-900 px-6 py-3 rounded-3xl">← Prev</button>
+    <div class="flex gap-4">
+        <button onclick="markKnown();event.stopImmediatePropagation()" class="bg-emerald-500 px-6 py-3 rounded-3xl">✅ Known</button>
+        <button onclick="markReview();event.stopImmediatePropagation()" class="bg-amber-500 px-6 py-3 rounded-3xl">📌 Review</button>
+    </div>
+    <button onclick="nextCard()" class="bg-zinc-900 px-6 py-3 rounded-3xl">Next →</button>
+</div>
+<!-- Review Mode -->
+<div onclick="toggleReviewMode()" id="review-mode-btn" class="mx-auto mt-6 flex items-center gap-3 bg-zinc-900 hover:bg-zinc-800 px-8 py-3 rounded-3xl cursor-pointer text-sm font-medium">
+    <span id="review-mode-text">ALL CARDS</span>
+    <span class="text-amber-400">📌</span>
+</div>
+</div>
+
+<!-- RESULTS MODAL -->
+<div id="results-modal" onclick="if(event.target.id==='results-modal')hideResultsModal()" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 max-w-md w-full mx-4 rounded-3xl p-8">
+        <h2 class="text-3xl font-bold mb-6">Study Summary</h2>
+        <div class="grid grid-cols-3 gap-4 mb-8">
+            <div class="bg-zinc-800 p-6 rounded-3xl text-center"><div id="modal-total" class="text-5xl font-bold">32</div><div class="text-xs text-zinc-400">Total</div></div>
+            <div class="bg-emerald-900/30 border border-emerald-400 p-6 rounded-3xl text-center"><div id="modal-known" class="text-5xl font-bold text-emerald-400">0</div><div class="text-xs text-emerald-400">Known</div></div>
+            <div class="bg-amber-900/30 border border-amber-400 p-6 rounded-3xl text-center"><div id="modal-review" class="text-5xl font-bold text-amber-400">0</div><div class="text-xs text-amber-400">Review</div></div>
+        </div>
+        <div id="trophy" class="hidden text-center text-7xl mb-4">🏆</div>
+        <div id="motivational-text" class="italic text-center bg-zinc-800 p-6 rounded-3xl"></div>
+        <div class="flex gap-3 mt-8">
+            <button onclick="hideResultsModal();restartStudy()" class="flex-1 py-4 bg-zinc-800 rounded-3xl">RESTART</button>
+            <button onclick="shareProgress()" class="flex-1 py-4 bg-yellow-400 text-black rounded-3xl font-semibold">SHARE PROGRESS</button>
+        </div>
+    </div>
+</div>
+
+<!-- REVIEW ALL MODAL -->
+<div id="review-all-modal" onclick="if(event.target.id==='review-all-modal')hideReviewAllModal()" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 w-full max-w-lg mx-4 rounded-3xl overflow-hidden">
+        <div class="px-8 py-6 border-b flex justify-between"><h3 class="font-bold text-xl">All 32 Cards • Status</h3><button onclick="hideReviewAllModal()" class="text-3xl">×</button></div>
+        <div id="card-list" class="max-h-[420px] overflow-auto p-4 space-y-2"></div>
+        <div class="p-4"><button onclick="hideReviewAllModal()" class="w-full py-4 bg-zinc-800 rounded-3xl">CLOSE</button></div>
+    </div>
+</div>
+
+<script>
+const originalCards=[
+{front:"Classification of I/O Devices",back:"Block (fixed blocks: HDD/SSD), Character (stream bytes: keyboard/mouse), Network (packets: Ethernet), Special (/dev/null, /dev/random)."},
+{front:"Block vs Character Devices",back:"Block: random access, fixed-size transfers. Character: sequential, byte stream. Key: Block support random access."},
+{front:"Device Controllers",back:"Bridge hardware-OS. Components: registers (status/control), local buffer. Translates high-level commands to device ops."},
+{front:"Memory-Mapped I/O",back:"I/O devices accessed via memory addresses using load/store instructions. Pros: no special I/O instructions. Cons: consumes memory space."},
+{front:"Direct Memory Access (DMA)",back:"CPU programs DMA controller (source/dest/length). DMA transfers data directly device ↔ RAM. Frees CPU. Interrupt on completion."},
+{front:"DMA Transfer Steps",back:"1. CPU initiates (source/dest/size). 2. DMA requests bus. 3. Transfers data (device → RAM). 4. Interrupt CPU on complete."},
+{front:"Types of Interrupts",back:"Hardware (device signals), Software (int 0x80 system calls), Exception (CPU faults like divide-by-zero)."},
+{front:"Interrupt Handling Steps",back:"1. Finish current instruction. 2. Save context. 3. Jump to ISR. 4. Restore context & resume."},
+{front:"Functions of I/O Software",back:"Device independence, buffering, error handling, device scheduling, device initialization & control."},
+{front:"Layers of I/O Software",back:"1. User-level (apps). 2. Device-independent (buffering/scheduling). 3. Device Drivers (hardware-specific). 4. Interrupt handlers & controllers."},
+{front:"Device Drivers Role",back:"Translate generic requests to hardware commands. Manage registers, interrupts, data transfer."},
+{front:"Disk Structure",back:"Platters, tracks, sectors (512B-4KB), cylinder (same track across platters)."},
+{front:"Disk Scheduling Algorithms",back:"FCFS, SSTF (shortest seek), SCAN (elevator), LOOK, C-SCAN (circular), C-LOOK."},
+{front:"FCFS Disk Scheduling",back:"First-Come-First-Served. Simple but high seek time (e.g., 498 in 200-track example starting at 100)."},
+{front:"SSTF Disk Scheduling",back:"Shortest Seek Time First. Minimizes head movement (e.g., 248 in same example)."},
+{front:"SCAN Disk Scheduling",back:"Elevator algorithm – full sweep to one end then reverse (e.g., 280 in example)."},
+{front:"C-SCAN Disk Scheduling",back:"Circular SCAN – always one direction, reset to start after last request (e.g., 384)."},
+{front:"LOOK & C-LOOK",back:"LOOK: SCAN but reverses at last request (250). C-LOOK: C-SCAN variant (322)."},
+{front:"Disk Formatting Types",back:"Low-level (physical sectors/tracks – factory), High-level (file system – OS/user), Quick (erase structures only), Full (erase + bad sector check)."},
+{front:"RAID Levels Overview",back:"RAID 0 (striping, no redundancy), RAID 1 (mirroring), RAID 5 (striping+parity), RAID 6 (dual parity)."},
+{front:"RAID 0",back:"Striping. High performance, no redundancy. Use: video editing."},
+{front:"RAID 1",back:"Mirroring. Full redundancy. Moderate performance. Use: critical databases."},
+{front:"RAID 5",back:"Striping + single parity. High read performance, tolerates 1 disk failure. Use: file servers."},
+{front:"RAID 6",back:"Striping + dual parity. Tolerates 2 disk failures. Use: archival storage."},
+{front:"I/O Software Device Independence",back:"Programs use generic calls; I/O software translates to device-specific commands."},
+{front:"Buffering in I/O",back:"Temporary storage to match speed differences between CPU/memory and slow devices."},
+{front:"Error Handling in I/O",back:"Detects device errors and reports/recovers (e.g., retry or notify user)."},
+{front:"Device Scheduling in I/O",back:"Manages multiple requests efficiently for better throughput/response time."},
+{front:"Disk Controller Example",back:"OS sends “read sector 42”. Controller moves arm, reads to buffer, interrupts on completion."},
+{front:"Memory-Mapped I/O Pros/Cons",back:"Pros: uses standard memory instructions. Cons: consumes address space."},
+{front:"DMA Advantages",back:"Frees CPU, faster bulk transfers. Cons: complexity (cache coherency)."},
+{front:"Disk Cylinder",back:"Set of tracks at same position on all platters. Minimizes head movement."},
+{front:"Low-Level vs High-Level Formatting",back:"Low: physical sectors/tracks (factory). High: creates file system (NTFS/ext4)."}
+]
+let deck=[]
+let statuses=new Array(originalCards.length).fill("not-studied")
+let current=0
+let flipped=false
+let shuffle=false
+let studyMode="all"
+
+function shuffleArray(arr){const shuffled=[...arr];for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]}return shuffled}
+function prepareDeck(){let indices=[...Array(originalCards.length).keys()];if(studyMode==="review") indices=indices.filter(i=>statuses[i]==="review");if(shuffle) indices=shuffleArray(indices);deck=indices;current=0;loadCard()}
+function loadCard(){let idx=deck[current];let card=originalCards[idx];document.getElementById("front-text").textContent=card.front;document.getElementById("back-text").innerHTML=card.back;document.getElementById("card-number").textContent=current+1;document.getElementById("total-cards").textContent=deck.length;document.getElementById("card-inner").classList.remove("flipped");flipped=false}
+function flipCard(){flipped=!flipped;document.getElementById("card-inner").classList.toggle("flipped")}
+function nextCard(){if(current<deck.length-1){current++;loadCard()}}
+function prevCard(){if(current>0){current--;loadCard()}}
+function markKnown(){statuses[deck[current]]="known";updateProgress();setTimeout(()=>{if(current<deck.length-1)nextCard()},300)}
+function markReview(){statuses[deck[current]]="review";updateProgress();setTimeout(()=>{if(current<deck.length-1)nextCard()},300)}
+function updateProgress(){let known=statuses.filter(s=>s==="known").length;let review=statuses.filter(s=>s==="review").length;document.getElementById("known-count").textContent=known;document.getElementById("review-count").textContent=review}
+function toggleShuffle(){shuffle=document.getElementById("shuffle-toggle").checked;prepareDeck()}
+function toggleReviewMode(){studyMode=studyMode==="all"?"review":"all";document.getElementById("review-mode-text").textContent=studyMode==="all"?"ALL CARDS":"REVIEW ONLY";prepareDeck()}
+function showResults(){let known=statuses.filter(s=>s==="known").length;let review=statuses.filter(s=>s==="review").length;let total=originalCards.length;let percent=Math.round(((known+review)/total)*100);document.getElementById("modal-total").textContent=total;document.getElementById("modal-known").textContent=known;document.getElementById("modal-review").textContent=review;document.getElementById("motivational-text").innerHTML=percent>80?"Outstanding performance! You mastered Unit 6 🏆":"Great work! Keep reviewing the marked cards.";document.getElementById("trophy").classList.toggle("hidden",percent<=80);document.getElementById("results-modal").classList.remove("hidden")}
+function hideResultsModal(){document.getElementById("results-modal").classList.add("hidden")}
+function shareProgress(){let known=statuses.filter(s=>s==="known").length;let review=statuses.filter(s=>s==="review").length;let total=originalCards.length;let percent=Math.round(((known+review)/total)*100);navigator.clipboard.writeText(`Flashzy Pro Unit 6 Device Management: ${percent}% complete!\n✅ Known: ${known}\n📌 Review: ${review}\n\nReady for the next unit! #FlashzyPro`);alert("Progress copied to clipboard ✅")}
+function showReviewAllModal(){let html="";originalCards.forEach((c,i)=>{let badge=statuses[i]==="known"?`<span class="bg-emerald-500 text-white px-3 py-1 text-xs rounded-full">KNOWN</span>`:statuses[i]==="review"?`<span class="bg-amber-500 text-white px-3 py-1 text-xs rounded-full">REVIEW</span>`:`<span class="bg-zinc-700 text-zinc-400 px-3 py-1 text-xs rounded-full">NOT STUDIED</span>`;html+=`<div class="flex justify-between bg-zinc-800 p-4 rounded-2xl text-sm">${c.front}${badge}</div>`});document.getElementById("card-list").innerHTML=html;document.getElementById("review-all-modal").classList.remove("hidden")}
+function hideReviewAllModal(){document.getElementById("review-all-modal").classList.add("hidden")}
+function restartStudy(){hideResultsModal();statuses=new Array(originalCards.length).fill("not-studied");updateProgress();prepareDeck()}
+document.addEventListener("keydown",e=>{if(e.key==="ArrowRight") nextCard();if(e.key==="ArrowLeft") prevCard();if(e.key===" "){e.preventDefault();flipCard()}})
+prepareDeck()
+updateProgress()
+console.log("%c✅ Flashzy Pro - Unit 6 Device Management loaded successfully with your working flip CSS 🚀","color:#fde047;font-family:monospace")
+</script>
+</body>
+</html>
